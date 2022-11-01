@@ -6,21 +6,36 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import com.example.showroomexperienceskotlin.databinding.FragmentQrCodeBinding
+import com.example.showroomexperienceskotlin.model.SharedViewModel
 
 class QrCodeFragment : Fragment() {
+
+    private var _binding: FragmentQrCodeBinding? = null
+    private val binding get() = _binding!!
+    // Shared ViewModel
+    private val sharedViewModel: SharedViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_qr_code, container, false)
+        _binding = FragmentQrCodeBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val buttonNext: Button = view.findViewById(R.id.buttonNext2)
-        buttonNext.setOnClickListener { findNavController().navigate(R.id.action_qrCodeFragment_to_startFragment) }
+        binding.buttonNext2.setOnClickListener {
+            sharedViewModel.resetExperience()
+            findNavController().navigate(R.id.action_qrCodeFragment_to_startFragment)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }
