@@ -5,9 +5,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupActionBarWithNavController
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity()  {
 
     private lateinit var navController: NavController
 
@@ -25,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) hideSystemUI()
+
     }
 
     private fun hideSystemUI() {
