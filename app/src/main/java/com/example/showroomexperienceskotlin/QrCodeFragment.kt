@@ -1,6 +1,7 @@
 package com.example.showroomexperienceskotlin
 
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -31,11 +32,18 @@ class QrCodeFragment : Fragment(), OnGoToLocationStatusChangedListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        binding.buttonNext2.setOnClickListener {
-            sharedViewModel.resetExperience()
+        //binding.buttonNext2.setOnClickListener {
+        Handler().postDelayed({
+            // metodo
+            sharedViewModel.setStatus(SharedViewModel.STATUS_WALKING)
             findNavController().navigate(R.id.action_qrCodeFragment_to_startFragment)
             sharedViewModel.goTo("home base")
-        }
+        }, 5000)
+
+        //sharedViewModel.setStatus(SharedViewModel.STATUS_WALKING)
+        //findNavController().navigate(R.id.action_qrCodeFragment_to_startFragment)
+        //sharedViewModel.goTo("home base")
+        //}
     }
 
     override fun onDestroyView() {
@@ -50,5 +58,10 @@ class QrCodeFragment : Fragment(), OnGoToLocationStatusChangedListener {
         description: String
     ) {
         Log.i(TAG, "Location: $location \n Status: $status \n DescriptionId: $descriptionId \n Description: $description \n")
+        when(status) {
+            OnGoToLocationStatusChangedListener.COMPLETE -> {
+                sharedViewModel.resetExperience()
+            }
+        }
     }
 }

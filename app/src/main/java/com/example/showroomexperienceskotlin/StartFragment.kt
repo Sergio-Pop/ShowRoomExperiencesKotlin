@@ -8,13 +8,13 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.VideoView
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.showroomexperienceskotlin.databinding.FragmentStartBinding
 import com.example.showroomexperienceskotlin.model.SharedViewModel
 import com.robotemi.sdk.listeners.OnDetectionStateChangedListener
 import com.robotemi.sdk.listeners.OnGoToLocationStatusChangedListener
-import kotlinx.coroutines.NonCancellable.start
 
 
 class StartFragment : Fragment(), OnDetectionStateChangedListener, OnGoToLocationStatusChangedListener {
@@ -39,24 +39,28 @@ class StartFragment : Fragment(), OnDetectionStateChangedListener, OnGoToLocatio
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Button
-        binding.buttonNext.setOnClickListener {attendExternalEvent("Button")}
-
         // VideoView
-        val uri: Uri = if (sharedViewModel.status.value=="Inicio")
-            Uri.parse("android.resource://" + context?.packageName + "/" + R.raw.v1) else
-            Uri.parse("android.resource://" + context?.packageName + "/" + R.raw.v_temi)
-        binding.videoView.apply {
-            setVideoURI(uri)
+        val uri: Uri = when (sharedViewModel.status.value) {
+            SharedViewModel.STATUS_START -> SharedViewModel.VIDEO_PROMOTION
+            SharedViewModel.STATUS_SPEAKING -> SharedViewModel.VIDEO_TEMI_FACE
+            else -> SharedViewModel.VIDEO_PROMOTION
+        }
+        val videoView: VideoView = binding.videoView // Obtiene referencia de la vista VideoView de la IU
+        initVideo(videoView, uri) // Inicializar video
+
+        // Robot
+        sharedViewModel.initDetectionMode(this) // Inicializar el modo deteccion
+    }
+
+    private fun initVideo(videoView: VideoView, videoUri: Uri) {
+        videoView.apply {
+            setVideoURI(videoUri)
             start()
-            setOnPreparedListener { mp ->
+            setOnPreparedListener() { mp ->
                 nMediaPlayer = mp
                 nMediaPlayer.isLooping = true
             }
         }
-
-        // Robot
-        sharedViewModel.initDetectionMode(this)
     }
 
     override fun onDestroyView() {
@@ -65,29 +69,23 @@ class StartFragment : Fragment(), OnDetectionStateChangedListener, OnGoToLocatio
         _binding = null
     }
 
-    fun attendExternalEvent(actualStatus: String) {
-        when(actualStatus){
-            "Deteccion" -> {
-                val uri2: Uri = Uri.parse("android.resource://" + context?.packageName + "/" + R.raw.v_temi)
-                binding.videoView.setVideoURI(uri2)
-                binding.videoView.start()
-                sharedViewModel.initGoToLocationMode(this)
-                sharedViewModel.goTo("1")
-
-            }
-            "Button"-> findNavController().navigate(R.id.action_startFragment_to_qrCodeFragment)
-        }
-        sharedViewModel.setStatus(actualStatus)
+    private fun attendDetection() {
+        val videoView: VideoView = binding.videoView
+        sharedViewModel.initTTS(requireContext())
+        sharedViewModel.speakTTS("Hola, sígueme y prueba el increíble sabor de la nueva Ades Avellana.")
+        initVideo(videoView, SharedViewModel.VIDEO_TEMI_FACE)
+        sharedViewModel.initGoToLocationMode(this)
+        sharedViewModel.goTo("1")
+        sharedViewModel.setStatus(SharedViewModel.STATUS_SPEAKING)
     }
 
     override fun onDetectionStateChanged(state: Int) {
-        Log.i(TAG, "Temi ha detectado un cambio en el estado de deteccion")
         when (state) {
             0 -> Log.i(TAG, "No se ha detectado a ninguna persona")
             1 -> Log.i(TAG, "Perdí a la persona")
             2 -> {
                 Log.i(TAG, "Detecte a alguien")
-                attendExternalEvent("Deteccion")
+                attendDetection()
             }
         }
     }
@@ -100,15 +98,13 @@ class StartFragment : Fragment(), OnDetectionStateChangedListener, OnGoToLocatio
     ) {
         Log.i(TAG, "Location: $location \n Status: $status \n DescriptionId: $descriptionId \n Description: $description \n")
         when (status) {
-            OnGoToLocationStatusChangedListener.CALCULATING -> {
-                sharedViewModel.setStatus("Walking")
-            }
-            OnGoToLocationStatusChangedListener.GOING -> {
-                sharedViewModel.setStatus("Walking")
-            }
             OnGoToLocationStatusChangedListener.COMPLETE -> {
-                findNavController().navigate(R.id.action_startFragment_to_qrCodeFragment)
-                sharedViewModel.setStatus("CodigoQR")
+                if(sharedViewModel.status.value != SharedViewModel.STATUS_START) {
+                    sharedViewModel.speakTTS("Llegamos! Disfruta del nuevo sabor de Ades Avellana.")
+                    findNavController().navigate(R.id.action_startFragment_to_qrCodeFragment)
+                    sharedViewModel.speakTTS("Si quieres seguir con la experiencia, escanea el siguiente código QR y juega con Ades Avellana. ")
+                    sharedViewModel.setStatus(SharedViewModel.STATUS_QR_CODE)
+                }
             }
         }
     }
