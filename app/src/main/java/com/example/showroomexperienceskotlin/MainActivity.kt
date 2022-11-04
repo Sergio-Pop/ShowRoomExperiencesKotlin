@@ -5,9 +5,13 @@ import android.os.Bundle
 import android.view.View
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupActionBarWithNavController
 
-class MainActivity : AppCompatActivity() {
+//curl -k "https://10.39.230.137:5556/grantAuth?pwd=U4YPLkur"
+class MainActivity : AppCompatActivity()  {
+
+    companion object {
+        val PACKAGE_NAME = BuildConfig.APPLICATION_ID
+    }
 
     private lateinit var navController: NavController
 
@@ -19,12 +23,12 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
-        // Shows a title in the ActionBar in according on the property label of each fragment in nav_graph.xml and the button Up
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) hideSystemUI()
+
     }
 
     private fun hideSystemUI() {
